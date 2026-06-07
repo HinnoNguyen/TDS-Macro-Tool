@@ -149,7 +149,7 @@ class RobloxMacroApp(ctk.CTk):
                 fg_color="transparent",
                 text_color=TEXT_COLOR,
                 hover_color=DARK_GRAY,
-                font=ctk.CTkFont(size=14, weight="medium"),
+                font=ctk.CTkFont(size=14, weight="normal"),
                 height=40,
                 corner_radius=8,
                 command=lambda tid=tab_id: self.select_tab(tid)
@@ -171,7 +171,7 @@ class RobloxMacroApp(ctk.CTk):
         self.status_text = ctk.CTkLabel(
             self.status_frame, 
             text="Roblox Inactive", 
-            font=ctk.CTkFont(size=12, weight="semibold"), 
+            font=ctk.CTkFont(size=12, weight="bold"), 
             text_color=TEXT_COLOR
         )
         self.status_text.grid(row=0, column=1, padx=8, sticky="w")
@@ -200,7 +200,7 @@ class RobloxMacroApp(ctk.CTk):
         cps_card = ctk.CTkFrame(frame, fg_color=BG_COLOR, corner_radius=8)
         cps_card.pack(fill="x", padx=25, pady=10)
 
-        cps_lbl = ctk.CTkLabel(cps_card, text="Clicks Per Second (CPS)", font=ctk.CTkFont(size=14, weight="semibold"))
+        cps_lbl = ctk.CTkLabel(cps_card, text="Clicks Per Second (CPS)", font=ctk.CTkFont(size=14, weight="bold"))
         cps_lbl.grid(row=0, column=0, padx=15, pady=10, sticky="w")
 
         self.cps_slider = ctk.CTkSlider(cps_card, from_=1, to=100, number_of_steps=99, button_color=CYAN, button_hover_color=BLUE, progress_color=CYAN)
@@ -217,7 +217,7 @@ class RobloxMacroApp(ctk.CTk):
         opts_card = ctk.CTkFrame(frame, fg_color="transparent")
         opts_card.pack(fill="x", padx=25, pady=10)
 
-        btn_lbl = ctk.CTkLabel(opts_card, text="Mouse Button:", font=ctk.CTkFont(size=13, weight="semibold"))
+        btn_lbl = ctk.CTkLabel(opts_card, text="Mouse Button:", font=ctk.CTkFont(size=13, weight="bold"))
         btn_lbl.grid(row=0, column=0, padx=(0, 10), pady=10, sticky="w")
         self.mouse_btn_opt = ctk.CTkOptionMenu(
             opts_card, 
@@ -286,7 +286,7 @@ class RobloxMacroApp(ctk.CTk):
         inputs_card = ctk.CTkFrame(frame, fg_color=BG_COLOR, corner_radius=8)
         inputs_card.pack(fill="x", padx=25, pady=10)
 
-        key_lbl = ctk.CTkLabel(inputs_card, text="Keys to Spam (e.g. 'e' or 'space' or 'w,a,s,d'):", font=ctk.CTkFont(size=13, weight="semibold"))
+        key_lbl = ctk.CTkLabel(inputs_card, text="Keys to Spam (e.g. 'e' or 'space' or 'w,a,s,d'):", font=ctk.CTkFont(size=13, weight="bold"))
         key_lbl.pack(anchor="w", padx=15, pady=(10, 5))
 
         self.spammer_keys_entry = ctk.CTkEntry(
@@ -299,7 +299,7 @@ class RobloxMacroApp(ctk.CTk):
         self.spammer_keys_entry.insert(0, "space")
         self.spammer_keys_entry.pack(fill="x", padx=15, pady=(0, 15))
 
-        interval_lbl = ctk.CTkLabel(inputs_card, text="Spam Interval (seconds):", font=ctk.CTkFont(size=13, weight="semibold"))
+        interval_lbl = ctk.CTkLabel(inputs_card, text="Spam Interval (seconds):", font=ctk.CTkFont(size=13, weight="bold"))
         interval_lbl.pack(anchor="w", padx=15, pady=(0, 5))
 
         self.spammer_interval_slider = ctk.CTkSlider(inputs_card, from_=0.01, to=10.0, number_of_steps=100, button_color=CYAN, button_hover_color=BLUE, progress_color=CYAN)
@@ -381,7 +381,7 @@ class RobloxMacroApp(ctk.CTk):
         )
         self.player_loop_chk.pack(anchor="w", padx=15, pady=(0, 10))
 
-        speed_lbl = ctk.CTkLabel(cfg_card, text="Playback Speed:", font=ctk.CTkFont(size=13, weight="semibold"))
+        speed_lbl = ctk.CTkLabel(cfg_card, text="Playback Speed:", font=ctk.CTkFont(size=13, weight="bold"))
         speed_lbl.pack(anchor="w", padx=15)
         
         self.speed_slider = ctk.CTkSlider(cfg_card, from_=0.1, to=10.0, number_of_steps=99, button_color=CYAN, button_hover_color=BLUE, progress_color=CYAN)
@@ -439,7 +439,7 @@ class RobloxMacroApp(ctk.CTk):
         self.record_start_btn = ctk.CTkButton(
             rec_frame, 
             text="🔴 Start Recording (F8)", 
-            font=ctk.CTkFont(size=13, weight="semibold"),
+            font=ctk.CTkFont(size=13, weight="bold"),
             fg_color=RED,
             hover_color="#f8a2b9",
             text_color=BG_COLOR,
@@ -450,7 +450,7 @@ class RobloxMacroApp(ctk.CTk):
         self.record_stop_btn = ctk.CTkButton(
             rec_frame, 
             text="⏹️ Stop Recording (F8)", 
-            font=ctk.CTkFont(size=13, weight="semibold"),
+            font=ctk.CTkFont(size=13, weight="bold"),
             fg_color=DARK_GRAY,
             hover_color=BLUE,
             command=self.stop_recording,
@@ -468,7 +468,7 @@ class RobloxMacroApp(ctk.CTk):
         self.play_start_btn = ctk.CTkButton(
             play_frame, 
             text="▶️ Start Playback (F9)", 
-            font=ctk.CTkFont(size=13, weight="semibold"),
+            font=ctk.CTkFont(size=13, weight="bold"),
             fg_color=GREEN,
             hover_color="#8ed189",
             text_color=BG_COLOR,
@@ -480,7 +480,7 @@ class RobloxMacroApp(ctk.CTk):
         self.play_stop_btn = ctk.CTkButton(
             play_frame, 
             text="⏹️ Stop Playback (F9)", 
-            font=ctk.CTkFont(size=13, weight="semibold"),
+            font=ctk.CTkFont(size=13, weight="bold"),
             fg_color=DARK_GRAY,
             hover_color=RED,
             command=self.stop_playback,
@@ -568,7 +568,7 @@ class RobloxMacroApp(ctk.CTk):
         hk_info = ctk.CTkLabel(
             hk_card, 
             text="Assign Hotkeys (Press the button and select the function key):", 
-            font=ctk.CTkFont(size=13, weight="semibold")
+            font=ctk.CTkFont(size=13, weight="bold")
         )
         hk_info.pack(anchor="w", padx=15, pady=10)
 
