@@ -7,6 +7,21 @@
 > [!IMPORTANT]
 > 💻 **Platform Support**: **Windows Only**. This tool relies on Windows active window APIs (`ctypes.windll.user32`) for Roblox process targeting and is configured with Windows batch launch scripts.
 
+### 🛠️ Languages, Frameworks & Tools
+<p align="left">
+  <img src="https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white" />
+  <img src="https://img.shields.io/badge/CustomTkinter-2d2d2d?style=for-the-badge&logo=python&logoColor=89dceb" />
+  <img src="https://img.shields.io/badge/pynput-4F5D75?style=for-the-badge&logo=python&logoColor=white" />
+  <img src="https://img.shields.io/badge/Windows-0078D6?style=for-the-badge&logo=windows&logoColor=white" />
+</p>
+
+### 📋 Requirements
+- **Operating System**: Windows 10 or 11 (64-bit).
+- **Python Version**: Python 3.9+ (make sure it's added to System PATH).
+- **Required Packages**:
+  - `customtkinter` (for modern dark GUI)
+  - `pynput` (for mouse & keyboard interaction)
+
 ---
 
 ## ✨ Features
@@ -42,23 +57,6 @@
 
 ---
 
-## 🛠️ Languages & Frameworks
-- **Python**: Core programming language.
-- **CustomTkinter**: GUI library for a modern dark-themed user interface.
-- **Pynput**: For global mouse and keyboard listener and controller APIs.
-- **ctypes**: Windows User32 APIs for Roblox active window checking and precise input simulation.
-
----
-
-## 📋 Requirements
-- **Operating System**: Windows 10 or 11 (64-bit).
-- **Python Version**: Python 3.9+ (make sure it's added to System PATH).
-- **Required Packages**:
-  - `customtkinter` (for modern dark GUI)
-  - `pynput` (for mouse & keyboard interaction)
-
----
-
 ## 🚀 How to Run
 1. Install requirements:
    ```bash
@@ -79,6 +77,21 @@
 
 > [!IMPORTANT]
 > 💻 **Hỗ trợ hệ điều hành**: **Chỉ hỗ trợ Windows**. Công cụ này sử dụng API kiểm tra cửa sổ hoạt động của Windows (`ctypes.windll.user32`) để tự động nhận diện game Roblox và đi kèm tệp khởi chạy nhanh `.bat` riêng cho Windows.
+
+### 🛠️ Ngôn ngữ, Thư viện & Công cụ (Languages, Frameworks & Tools)
+<p align="left">
+  <img src="https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white" />
+  <img src="https://img.shields.io/badge/CustomTkinter-2d2d2d?style=for-the-badge&logo=python&logoColor=89dceb" />
+  <img src="https://img.shields.io/badge/pynput-4F5D75?style=for-the-badge&logo=python&logoColor=white" />
+  <img src="https://img.shields.io/badge/Windows-0078D6?style=for-the-badge&logo=windows&logoColor=white" />
+</p>
+
+### 📋 Yêu cầu hệ thống (Requirements)
+- **Hệ điều hành**: Windows 10 hoặc 11 (64-bit).
+- **Phiên bản Python**: Python 3.9 trở lên (đã cấu hình thêm vào biến môi trường PATH).
+- **Các thư viện yêu cầu**:
+  - `customtkinter` (cho giao diện tối hiện đại)
+  - `pynput` (cho tương tác chuột và phím)
 
 ---
 
@@ -112,23 +125,6 @@
 - **TDS Auto Skip Wave**: Tự động nhấn phím `f` mỗi 1.0 giây để tự động bỏ qua lượt (skip wave).
 - **TDS Commander/DJ Ability Chain**: Tự động nhấn chuỗi phím `1, 2, 3` mỗi 10.0 giây để tự động kích hoạt kỹ năng Commander/DJ liên tục.
 - **TDS Fast Upgrade/Placement**: Auto clicker chuột trái 100 CPS để nâng cấp hoặc đặt lính cực nhanh.
-
----
-
-## 🛠️ Ngôn ngữ & Thư viện (Languages & Frameworks)
-- **Python**: Ngôn ngữ lập trình chính.
-- **CustomTkinter**: Thư viện thiết kế giao diện đồ họa (GUI) hiện đại với giao diện Dark theme.
-- **Pynput**: Thư viện theo dõi và giả lập các thao tác bấm phím/click chuột toàn hệ thống.
-- **ctypes**: Sử dụng Win32 API để kiểm tra cửa sổ Roblox đang hoạt động và truyền tín hiệu mô phỏng chính xác.
-
----
-
-## 📋 Yêu cầu hệ thống (Requirements)
-- **Hệ điều hành**: Windows 10 hoặc 11 (64-bit).
-- **Phiên bản Python**: Python 3.9 trở lên (đã cấu hình thêm vào biến môi trường PATH).
-- **Các thư viện yêu cầu**:
-  - `customtkinter` (cho giao diện tối hiện đại)
-  - `pynput` (cho tương tác chuột và phím)
 
 ---
 
