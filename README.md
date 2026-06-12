@@ -1,7 +1,5 @@
 # 🎮 Roblox TDS Macro - Tower Defense Simulator Automation Tool
 
-[Tiếng Việt bên dưới](#tiếng-việt)
-
 **Roblox TDS Macro** is a modern, high-performance, and feature-rich desktop automation app built using Python, CustomTkinter, and Pynput. It features a sleek Catppuccin Mocha dark theme with emerald green, neon cyan, and rose accents, tailored specifically for Roblox TDS (Tower Defense Simulator) gamers.
 
 > [!IMPORTANT]
@@ -64,77 +62,6 @@
    ```
 2. Run the application:
    - On Windows: Double-click `run.bat` or run:
-     ```bash
-     python main.py
-     ```
-
----
----
-
-## Tiếng Việt
-
-**Roblox TDS Macro** là ứng dụng tự động hóa dành cho máy tính được phát triển bằng Python, CustomTkinter và Pynput với giao diện tối tối hiện đại màu Catppuccin Mocha cực kỳ đẹp mắt, tối ưu hóa riêng cho các game thủ Roblox TDS (Tower Defense Simulator).
-
-> [!IMPORTANT]
-> 💻 **Hỗ trợ hệ điều hành**: **Chỉ hỗ trợ Windows**. Công cụ này sử dụng API kiểm tra cửa sổ hoạt động của Windows (`ctypes.windll.user32`) để tự động nhận diện game Roblox và đi kèm tệp khởi chạy nhanh `.bat` riêng cho Windows.
-
-### 🛠️ Ngôn ngữ, Thư viện & Công cụ (Languages, Frameworks & Tools)
-<p align="left">
-  <img src="https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white" />
-  <img src="https://img.shields.io/badge/CustomTkinter-2d2d2d?style=for-the-badge&logo=python&logoColor=89dceb" />
-  <img src="https://img.shields.io/badge/pynput-4F5D75?style=for-the-badge&logo=python&logoColor=white" />
-  <img src="https://img.shields.io/badge/Windows-0078D6?style=for-the-badge&logo=windows&logoColor=white" />
-</p>
-
-### 📋 Yêu cầu hệ thống (Requirements)
-- **Hệ điều hành**: Windows 10 hoặc 11 (64-bit).
-- **Phiên bản Python**: Python 3.9 trở lên (đã cấu hình thêm vào biến môi trường PATH).
-- **Các thư viện yêu cầu**:
-  - `customtkinter` (cho giao diện tối hiện đại)
-  - `pynput` (cho tương tác chuột và phím)
-
----
-
-## ✨ Tính năng nổi bật
-
-### 1. 🖱️ Tự động click chuột (Auto Clicker)
-- **Clicks Per Second (CPS)**: Tốc độ từ 1 đến 100 lần click/giây.
-- **Nút chuột**: Hỗ trợ Click Trái, Click Phải và Click Giữa.
-- **Chế độ**: Chọn click đơn hoặc click đúp chuột.
-- **Tự động dừng thông minh**: Tự động tạm dừng click khi bạn Alt+Tab chuyển cửa sổ khỏi Roblox.
-- **Phím tắt mặc định**: **`F6`** (Bật/Tắt toàn hệ thống).
-
-### 2. ⌨️ Tự động gõ phím (Key Spammer)
-- **Chuỗi ký tự**: Gõ một phím đơn (ví dụ: `space`, `e`) hoặc chuỗi phím cách nhau bởi dấu phẩy (ví dụ: `w,s`).
-- **Độ trễ**: Chỉnh từ 0.01 giây đến 10.0 giây giữa các lần nhấn phím.
-- **Phím tắt mặc định**: **`F7`** (Bật/Tắt toàn hệ thống).
-
-### 3. ⏺️ Ghi & Phát lại Macro (Macro Recorder & Player)
-- **Nút điều khiển riêng biệt**:
-  - **🔴 Start Recording** (Phím tắt: **`F8`**): Bắt đầu ghi thao tác chuột/phím.
-  - **⏹️ Stop Recording** (Phím tắt: **`F8`**): Dừng ghi thao tác.
-  - **▶️ Start Playback** (Phím tắt: **`F9`**): Bắt đầu phát lại macro.
-  - **⏹️ Stop Playback** (Phím tắt: **`F9`**): Dừng phát lại macro lập tức.
-- **Tọa độ chuột**: Tùy chọn bật/tắt ghi lại chuyển động chuột.
-- **Lặp vô hạn (Loop)**: Giúp macro lặp lại liên tục cho đến khi nhấn dừng.
-- **Tốc độ phát**: Điều chỉnh tốc độ phát từ **0.1x** đến **10.0x**.
-- **Xuất/Nhập tệp**: Lưu các macro dưới dạng file `.json` để tải lại khi cần.
-
-### 🌟 Cài đặt sẵn (Presets)
-- **TDS Anti-AFK**: Tự động nhảy mỗi 30 giây tránh bị Roblox kích do treo máy trong trận đấu TDS kéo dài.
-- **TDS Auto Skip Wave**: Tự động nhấn phím `f` mỗi 1.0 giây để tự động bỏ qua lượt (skip wave).
-- **TDS Commander/DJ Ability Chain**: Tự động nhấn chuỗi phím `1, 2, 3` mỗi 10.0 giây để tự động kích hoạt kỹ năng Commander/DJ liên tục.
-- **TDS Fast Upgrade/Placement**: Auto clicker chuột trái 100 CPS để nâng cấp hoặc đặt lính cực nhanh.
-
----
-
-## 🚀 Hướng dẫn khởi chạy
-1. Cài đặt các thư viện cần thiết:
-   ```bash
-   pip install -r requirements.txt
-   ```
-2. Chạy ứng dụng:
-   - Trên Windows: Double-click file `run.bat` hoặc chạy lệnh:
      ```bash
      python main.py
      ```
