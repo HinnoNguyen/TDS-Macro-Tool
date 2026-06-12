@@ -42,6 +42,14 @@
 
 ---
 
+## 🛠️ Languages & Frameworks
+- **Python**: Core programming language.
+- **CustomTkinter**: GUI library for a modern dark-themed user interface.
+- **Pynput**: For global mouse and keyboard listener and controller APIs.
+- **ctypes**: Windows User32 APIs for Roblox active window checking and precise input simulation.
+
+---
+
 ## 🚀 How to Run
 1. Install requirements:
    ```bash
@@ -95,6 +103,14 @@
 - **TDS Auto Skip Wave**: Tự động nhấn phím `f` mỗi 1.0 giây để tự động bỏ qua lượt (skip wave).
 - **TDS Commander/DJ Ability Chain**: Tự động nhấn chuỗi phím `1, 2, 3` mỗi 10.0 giây để tự động kích hoạt kỹ năng Commander/DJ liên tục.
 - **TDS Fast Upgrade/Placement**: Auto clicker chuột trái 100 CPS để nâng cấp hoặc đặt lính cực nhanh.
+
+---
+
+## 🛠️ Ngôn ngữ & Thư viện (Languages & Frameworks)
+- **Python**: Ngôn ngữ lập trình chính.
+- **CustomTkinter**: Thư viện thiết kế giao diện đồ họa (GUI) hiện đại với giao diện Dark theme.
+- **Pynput**: Thư viện theo dõi và giả lập các thao tác bấm phím/click chuột toàn hệ thống.
+- **ctypes**: Sử dụng Win32 API để kiểm tra cửa sổ Roblox đang hoạt động và truyền tín hiệu mô phỏng chính xác.
 
 ---
 
