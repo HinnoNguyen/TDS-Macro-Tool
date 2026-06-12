@@ -46,12 +46,9 @@ class RobloxMacroApp(ctk.CTk):
         # Set Window Icon
         try:
             current_dir = os.path.dirname(os.path.abspath(__file__))
-            icon_path = os.path.join(current_dir, "logo.jpg")
+            icon_path = os.path.join(current_dir, "logo.ico")
             if os.path.exists(icon_path):
-                img = Image.open(icon_path)
-                photo = ImageTk.PhotoImage(img)
-                self.iconphoto(False, photo)
-                self._icon = photo  # Keep reference to prevent garbage collection
+                self.iconbitmap(icon_path)
         except Exception as e:
             print(f"Failed to load window icon: {e}")
 
