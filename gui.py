@@ -86,6 +86,9 @@ class HinnoMacroApp(ctk.CTk):
         self.recording_running = False
         self.recorder_thread = None
 
+        # Load all macros from disk
+        self.load_all_macros()
+
         # Build UI Elements
         self.grid_columnconfigure(1, weight=1)
         self.grid_rowconfigure(0, weight=1)
@@ -337,6 +340,19 @@ class HinnoMacroApp(ctk.CTk):
         btn_frame = ctk.CTkFrame(header_card, fg_color="transparent")
         btn_frame.grid(row=0, column=1, sticky="e")
 
+        self.btn_save = ctk.CTkButton(
+            btn_frame,
+            text="💾 Save",
+            font=ctk.CTkFont(family="Segoe UI", size=12, weight="bold"),
+            fg_color=BORDER_COLOR,
+            text_color=TEXT_MAIN,
+            hover_color="#33333d",
+            width=90,
+            height=34,
+            command=self.save_active_macro
+        )
+        self.btn_save.grid(row=0, column=0, padx=(0, 10))
+
         self.btn_record = ctk.CTkButton(
             btn_frame,
             text=f"● Record ({self.hotkey_record})",
@@ -350,7 +366,7 @@ class HinnoMacroApp(ctk.CTk):
             height=34,
             command=self.toggle_recording
         )
-        self.btn_record.grid(row=0, column=0, padx=10)
+        self.btn_record.grid(row=0, column=1, padx=10)
 
         self.btn_run = ctk.CTkButton(
             btn_frame,
@@ -798,6 +814,52 @@ class HinnoMacroApp(ctk.CTk):
             command=save_settings
         )
         btn_save.grid(row=2, column=0, columnspan=2, padx=15, pady=(0, 15), sticky="ew")
+
+    def save_active_macro(self):
+        # Read current inputs from GUI to self.macros
+        macro = self.macros[self.active_macro]
+        macro["victory_img"] = self.ent_victory.get().strip()
+        macro["defeat_img"] = self.ent_defeat.get().strip()
+        
+        try:
+            macro["play_again_x"] = int(self.ent_play_x.get().strip())
+            macro["play_again_y"] = int(self.ent_play_y.get().strip())
+        except ValueError:
+            pass
+            
+        # Write to JSON file
+        macros_dir = r"D:\Tools\Macro\macros"
+        os.makedirs(macros_dir, exist_ok=True)
+        file_path = os.path.join(macros_dir, f"{self.active_macro}.json")
+        
+        try:
+            with open(file_path, "w", encoding="utf-8") as f:
+                json.dump(macro, f, indent=4, ensure_ascii=False)
+            self.log_status("Saved", color=GREEN_ACCENT)
+            self.after(2000, lambda: self.log_status("Finished", color=TEXT_MUTED))
+            messagebox.showinfo("Success", f"Macro '{self.active_macro}' saved successfully!")
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to save macro:\n{e}")
+
+    def load_all_macros(self):
+        macros_dir = r"D:\Tools\Macro\macros"
+        os.makedirs(macros_dir, exist_ok=True)
+        
+        # Check for json files
+        files = [f for f in os.listdir(macros_dir) if f.endswith(".json")]
+        if len(files) > 0:
+            self.macros = {}
+            for file in files:
+                name = os.path.splitext(file)[0]
+                file_path = os.path.join(macros_dir, file)
+                try:
+                    with open(file_path, "r", encoding="utf-8") as f:
+                        self.macros[name] = json.load(f)
+                except Exception as e:
+                    print(f"Error loading macro {file}: {e}")
+            
+            # Set active macro to first loaded
+            self.active_macro = list(self.macros.keys())[0]
 
     def create_new_macro(self):
         name = simpledialog.askstring("New Macro", "Enter macro name:")
