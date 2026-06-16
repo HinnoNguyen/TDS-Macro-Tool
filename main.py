@@ -12,11 +12,11 @@ try:
 except Exception:
     pass
 
-from gui import RobloxMacroApp
+from gui import HinnoMacroApp
 
 def main():
     try:
-        app = RobloxMacroApp()
+        app = HinnoMacroApp()
         app.protocol("WM_DELETE_WINDOW", app.on_closing)
         app.mainloop()
     except Exception as e:

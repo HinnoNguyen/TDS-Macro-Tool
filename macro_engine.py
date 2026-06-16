@@ -158,6 +158,140 @@ def is_roblox_active():
     title = get_active_window_title()
     return "Roblox" in title
 
+# --- Win32 Background Inputs Helper ---
+class POINT(ctypes.Structure):
+    _fields_ = [("x", ctypes.c_long), ("y", ctypes.c_long)]
+
+class RECT(ctypes.Structure):
+    _fields_ = [
+        ("left", ctypes.c_long),
+        ("top", ctypes.c_long),
+        ("right", ctypes.c_long),
+        ("bottom", ctypes.c_long),
+    ]
+
+def find_roblox_hwnd():
+    hwnd = ctypes.windll.user32.FindWindowW("ROBLOXCLASS", None)
+    if not hwnd:
+        hwnd = ctypes.windll.user32.FindWindowW(None, "Roblox")
+    return hwnd
+
+def screen_to_client(hwnd, x, y):
+    pt = POINT(int(x), int(y))
+    ctypes.windll.user32.ScreenToClient(hwnd, ctypes.byref(pt))
+    return pt.x, pt.y
+
+def get_window_rect(hwnd):
+    rect = RECT()
+    ctypes.windll.user32.GetClientRect(hwnd, ctypes.byref(rect))
+    w = rect.right - rect.left
+    h = rect.bottom - rect.top
+    return w, h
+
+def key_to_vk(key):
+    if isinstance(key, str):
+        if key.startswith("Key."):
+            key_name = key.split(".")[1].lower()
+        elif key.startswith("vk."):
+            try:
+                return int(key.split(".")[1])
+            except ValueError:
+                return None
+        else:
+            key_name = key.lower()
+    elif isinstance(key, keyboard.Key):
+        key_name = key.name.lower()
+    elif hasattr(key, 'char') and key.char is not None:
+        key_name = key.char.lower()
+    elif hasattr(key, 'vk') and key.vk is not None:
+        return key.vk
+    else:
+        key_name = str(key).lower()
+
+    vk_map = {
+        "space": 0x20,
+        "enter": 0x0D,
+        "return": 0x0D,
+        "shift": 0x10,
+        "ctrl": 0x11,
+        "alt": 0x12,
+        "tab": 0x09,
+        "esc": 0x1B,
+        "escape": 0x1B,
+        "backspace": 0x08,
+        "delete": 0x2E,
+        "up": 0x26,
+        "down": 0x28,
+        "left": 0x25,
+        "right": 0x27,
+    }
+    
+    if key_name.startswith('f') and key_name[1:].isdigit():
+        f_num = int(key_name[1:])
+        if 1 <= f_num <= 12:
+            return 0x6F + f_num
+            
+    if key_name in vk_map:
+        return vk_map[key_name]
+        
+    if len(key_name) == 1:
+        vk = ctypes.windll.user32.VkKeyScanW(ord(key_name))
+        if vk != -1:
+            return vk & 0xFF
+            
+    return None
+
+def send_background_key(hwnd, vk_code, duration=0.01):
+    if not hwnd or vk_code is None:
+        return
+    ctypes.windll.user32.PostMessageW(hwnd, 0x0100, vk_code, 0)
+    time.sleep(duration)
+    ctypes.windll.user32.PostMessageW(hwnd, 0x0101, vk_code, 0xC0000001)
+
+def send_background_click(hwnd, button_name, x, y, double_click=False):
+    if not hwnd:
+        return
+    if button_name == "right":
+        msg_down = 0x0204
+        msg_up = 0x0205
+        wparam = 0x0002
+    elif button_name == "middle":
+        msg_down = 0x0207
+        msg_up = 0x0208
+        wparam = 0x0010
+    else:
+        msg_down = 0x0201
+        msg_up = 0x0202
+        wparam = 0x0001
+
+    lparam = (int(y) << 16) | (int(x) & 0xFFFF)
+    
+    ctypes.windll.user32.PostMessageW(hwnd, msg_down, wparam, lparam)
+    time.sleep(0.01)
+    ctypes.windll.user32.PostMessageW(hwnd, msg_up, 0, lparam)
+    
+    if double_click:
+        time.sleep(0.02)
+        ctypes.windll.user32.PostMessageW(hwnd, msg_down, wparam, lparam)
+        time.sleep(0.01)
+        ctypes.windll.user32.PostMessageW(hwnd, msg_up, 0, lparam)
+
+def send_background_move(hwnd, x, y):
+    if not hwnd:
+        return
+    lparam = (int(y) << 16) | (int(x) & 0xFFFF)
+    ctypes.windll.user32.PostMessageW(hwnd, 0x0200, 0, lparam)
+
+def send_background_scroll(hwnd, x, y, dx=0, dy=0):
+    if not hwnd:
+        return
+    delta = int(dy) * 120
+    wparam = (delta & 0xFFFF) << 16
+    pt = POINT(int(x), int(y))
+    ctypes.windll.user32.ClientToScreen(hwnd, ctypes.byref(pt))
+    lparam = (pt.y << 16) | (pt.x & 0xFFFF)
+    ctypes.windll.user32.PostMessageW(hwnd, 0x020A, wparam, lparam)
+
 # Global controllers
 mouse_controller = mouse.Controller()
 keyboard_controller = keyboard.Controller()
@@ -208,11 +342,14 @@ class AutoClicker:
         self.button = mouse.Button.left
         self.double_click = False
         self.roblox_only = True
+        self.background_mode = False
+        self.click_pos = None
+        self.hwnd = None
         self.running = False
         self._thread = None
         self.lock = threading.Lock()
 
-    def start(self, cps=10.0, button_name="left", double_click=False, roblox_only=True):
+    def start(self, cps=10.0, button_name="left", double_click=False, roblox_only=True, background_mode=False):
         with self.lock:
             if self.running:
                 return
@@ -226,6 +363,24 @@ class AutoClicker:
                 self.button = mouse.Button.middle
             self.double_click = double_click
             self.roblox_only = roblox_only
+            self.background_mode = background_mode
+            self.hwnd = find_roblox_hwnd()
+            
+            if self.background_mode:
+                if self.hwnd:
+                    pt = POINT()
+                    ctypes.windll.user32.GetCursorPos(ctypes.byref(pt))
+                    rx, ry = screen_to_client(self.hwnd, pt.x, pt.y)
+                    w, h = get_window_rect(self.hwnd)
+                    if 0 <= rx <= w and 0 <= ry <= h:
+                        self.click_pos = (rx, ry)
+                    else:
+                        self.click_pos = (w // 2, h // 2)
+                else:
+                    self.click_pos = None
+            else:
+                self.click_pos = None
+
             self.running = True
             self._thread = threading.Thread(target=self._run, daemon=True)
             self._thread.start()
@@ -236,15 +391,26 @@ class AutoClicker:
 
     def _run(self):
         while self.running:
-            if not self.roblox_only or is_roblox_active():
-                try:
-                    button_name = self.button.name
-                    if self.double_click:
-                        win32_click(button_name, 2)
-                    else:
-                        win32_click(button_name, 1)
-                except Exception as e:
-                    print(f"Auto-clicker error: {e}")
+            if self.background_mode:
+                if self.hwnd:
+                    try:
+                        button_name = self.button.name
+                        x, y = self.click_pos if self.click_pos else (0, 0)
+                        send_background_click(self.hwnd, button_name, x, y, self.double_click)
+                    except Exception as e:
+                        print(f"Background Auto-clicker error: {e}")
+                else:
+                    self.hwnd = find_roblox_hwnd()
+            else:
+                if not self.roblox_only or is_roblox_active():
+                    try:
+                        button_name = self.button.name
+                        if self.double_click:
+                            win32_click(button_name, 2)
+                        else:
+                            win32_click(button_name, 1)
+                    except Exception as e:
+                        print(f"Auto-clicker error: {e}")
             time.sleep(self.interval)
 
 
@@ -253,11 +419,13 @@ class KeySpammer:
         self.interval = 0.1
         self.keys_to_spam = []
         self.roblox_only = True
+        self.background_mode = False
+        self.hwnd = None
         self.running = False
         self._thread = None
         self.lock = threading.Lock()
 
-    def start(self, keys_str, interval=0.1, roblox_only=True):
+    def start(self, keys_str, interval=0.1, roblox_only=True, background_mode=False):
         with self.lock:
             if self.running:
                 return
@@ -275,6 +443,8 @@ class KeySpammer:
 
             self.interval = max(interval, 0.01)
             self.roblox_only = roblox_only
+            self.background_mode = background_mode
+            self.hwnd = find_roblox_hwnd()
             self.running = True
             self._thread = threading.Thread(target=self._run, daemon=True)
             self._thread.start()
@@ -285,20 +455,36 @@ class KeySpammer:
 
     def _run(self):
         while self.running:
-            if not self.roblox_only or is_roblox_active():
-                for key in self.keys_to_spam:
-                    if not self.running:
-                        break
-                    try:
-                        k = deserialize_key(key)
-                        keyboard_controller.press(k)
-                        time.sleep(0.01) # Short press duration
-                        keyboard_controller.release(k)
-                    except Exception as e:
-                        print(f"Spammer error: {e}")
-                    time.sleep(self.interval)
+            if self.background_mode:
+                if self.hwnd:
+                    for key in self.keys_to_spam:
+                        if not self.running:
+                            break
+                        try:
+                            vk = key_to_vk(key)
+                            if vk is not None:
+                                send_background_key(self.hwnd, vk, 0.01)
+                        except Exception as e:
+                            print(f"Background Spammer error: {e}")
+                        time.sleep(self.interval)
+                else:
+                    self.hwnd = find_roblox_hwnd()
+                    time.sleep(0.5)
             else:
-                time.sleep(0.1) # Cool down when inactive
+                if not self.roblox_only or is_roblox_active():
+                    for key in self.keys_to_spam:
+                        if not self.running:
+                            break
+                        try:
+                            k = deserialize_key(key)
+                            keyboard_controller.press(k)
+                            time.sleep(0.01) # Short press duration
+                            keyboard_controller.release(k)
+                        except Exception as e:
+                            print(f"Spammer error: {e}")
+                        time.sleep(self.interval)
+                else:
+                    time.sleep(0.1) # Cool down when inactive
 
 
 class MacroRecorder:
@@ -419,10 +605,12 @@ class MacroPlayer:
         self.roblox_only = True
         self.loop = False
         self.speed = 1.0
+        self.background_mode = False
+        self.hwnd = None
         self._thread = None
         self.lock = threading.Lock()
 
-    def start(self, events, loop=False, speed=1.0, roblox_only=True):
+    def start(self, events, loop=False, speed=1.0, roblox_only=True, background_mode=False):
         with self.lock:
             if self.running:
                 return
@@ -430,6 +618,8 @@ class MacroPlayer:
             self.loop = loop
             self.speed = max(speed, 0.1)
             self.roblox_only = roblox_only
+            self.background_mode = background_mode
+            self.hwnd = find_roblox_hwnd()
             self.running = True
             self._thread = threading.Thread(target=self._run, daemon=True)
             self._thread.start()
@@ -447,12 +637,20 @@ class MacroPlayer:
             event_idx = 0
             self._play_mouse_x = None
             self._play_mouse_y = None
+            self._play_left_held = False
             self._play_right_held = False
+            self._play_middle_held = False
             
             while event_idx < len(self.events) and self.running:
-                if self.roblox_only and not is_roblox_active():
-                    time.sleep(0.1)
-                    continue
+                if self.background_mode:
+                    if not self.hwnd:
+                        self.hwnd = find_roblox_hwnd()
+                        time.sleep(0.1)
+                        continue
+                else:
+                    if self.roblox_only and not is_roblox_active():
+                        time.sleep(0.1)
+                        continue
 
                 event = self.events[event_idx]
                 target_time = event["time"] / self.speed
@@ -474,7 +672,8 @@ class MacroPlayer:
                         else None
                     )
                     if (
-                        event.get("type") == "mouse_click"
+                        not self.background_mode
+                        and event.get("type") == "mouse_click"
                         and event.get("pressed") is True
                         and next_event is not None
                         and self._is_simple_click_pair(event, next_event)
@@ -505,7 +704,8 @@ class MacroPlayer:
         )
 
     def _move_playback_cursor(self, x, y):
-        if self._play_right_held and self._play_mouse_x is not None and self._play_mouse_y is not None:
+        is_held = self._play_left_held or self._play_right_held or self._play_middle_held
+        if is_held and self._play_mouse_x is not None and self._play_mouse_y is not None:
             win32_move_relative(x - self._play_mouse_x, y - self._play_mouse_y)
         else:
             win32_move_absolute(x, y)
@@ -513,6 +713,10 @@ class MacroPlayer:
         self._play_mouse_y = y
 
     def _execute_event(self, event, next_event=None):
+        if self.background_mode and self.hwnd:
+            self._execute_background_event(event, next_event)
+            return
+
         etype = event["type"]
         if etype == "mouse_click":
             x, y = event["x"], event["y"]
@@ -528,13 +732,26 @@ class MacroPlayer:
                 win32_click(button_name, 1)
                 return
 
-            if not (self._play_right_held and button_name == "right" and not pressed):
+            # Check if this button is currently held and we are releasing it
+            is_held_button = False
+            if button_name == "right" and self._play_right_held:
+                is_held_button = True
+            elif button_name == "left" and self._play_left_held:
+                is_held_button = True
+            elif button_name == "middle" and self._play_middle_held:
+                is_held_button = True
+
+            if not (is_held_button and not pressed):
                 if self._play_mouse_x != x or self._play_mouse_y != y:
                     self._move_playback_cursor(x, y)
 
             win32_button(button_name, pressed)
             if button_name == "right":
                 self._play_right_held = pressed
+            elif button_name == "left":
+                self._play_left_held = pressed
+            elif button_name == "middle":
+                self._play_middle_held = pressed
         elif etype == "mouse_move":
             self._move_playback_cursor(event["x"], event["y"])
         elif etype == "mouse_scroll":
@@ -548,3 +765,52 @@ class MacroPlayer:
         elif etype == "key_release":
             key = deserialize_key(event["key"])
             keyboard_controller.release(key)
+
+    def _execute_background_event(self, event, next_event=None):
+        etype = event["type"]
+        if etype in ["mouse_click", "mouse_move", "mouse_scroll"]:
+            cx, cy = screen_to_client(self.hwnd, event["x"], event["y"])
+            
+            if etype == "mouse_click":
+                button_name = button_name_from_event(event)
+                pressed = event["pressed"]
+                
+                if pressed:
+                    if button_name == "left":
+                        msg = 0x0201
+                        wparam = 0x0001
+                    elif button_name == "right":
+                        msg = 0x0204
+                        wparam = 0x0002
+                    else:
+                        msg = 0x0207
+                        wparam = 0x0010
+                else:
+                    if button_name == "left":
+                        msg = 0x0202
+                        wparam = 0
+                    elif button_name == "right":
+                        msg = 0x0205
+                        wparam = 0
+                    else:
+                        msg = 0x0208
+                        wparam = 0
+                
+                lparam = (cy << 16) | (cx & 0xFFFF)
+                ctypes.windll.user32.PostMessageW(self.hwnd, msg, wparam, lparam)
+                
+            elif etype == "mouse_move":
+                send_background_move(self.hwnd, cx, cy)
+                
+            elif etype == "mouse_scroll":
+                send_background_scroll(self.hwnd, cx, cy, event.get("dx", 0), event.get("dy", 0))
+                
+        elif etype == "key_press":
+            vk = key_to_vk(event["key"])
+            if vk is not None:
+                ctypes.windll.user32.PostMessageW(self.hwnd, 0x0100, vk, 0)
+                
+        elif etype == "key_release":
+            vk = key_to_vk(event["key"])
+            if vk is not None:
+                ctypes.windll.user32.PostMessageW(self.hwnd, 0x0101, vk, 0xC0000001)

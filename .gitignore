@@ -5,3 +5,11 @@ __pycache__/
 .vscode/
 .idea/
 *.json
+
+# Private game automation files (TDS templates & models)
+dataset/
+screenshots/
+templates/
+*.pth
+*.log
+gui_backup.py
