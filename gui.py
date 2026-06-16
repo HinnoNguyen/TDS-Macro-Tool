@@ -45,8 +45,8 @@ class HinnoMacroApp(ctk.CTk):
 
         # Active Macro and State Data
         self.active_macro = "coin"
-        self.hotkey_record = "F8"
-        self.hotkey_play = "F9"
+        self.hotkey_record = "["
+        self.hotkey_play = "]"
         self.macros = {
             "coin": {
                 "desc": "Automates Victory/Defeat detection using template image matching. If victory: loops lobby + strategy steps. If defeat: restarts map directly (skips lobby).",
@@ -100,6 +100,18 @@ class HinnoMacroApp(ctk.CTk):
         self.start_global_listener()
 
     # ================= GLOBAL HOTKEYS =================
+    def get_pynput_key(self, key_str):
+        from pynput import keyboard
+        key_str = key_str.lower()
+        if key_str.startswith('f') and key_str[1:].isdigit():
+            f_num = int(key_str[1:])
+            return getattr(keyboard.Key, f"f{f_num}")
+        if key_str == "space":
+            return keyboard.Key.space
+        if key_str == "caps lock" or key_str == "caps_lock":
+            return keyboard.Key.caps_lock
+        return keyboard.KeyCode.from_char(key_str[0])
+
     def start_global_listener(self):
         # Stop existing listener if running
         if hasattr(self, "listener") and self.listener:
@@ -110,20 +122,8 @@ class HinnoMacroApp(ctk.CTk):
 
         from pynput import keyboard
         
-        # Helper to convert string key to pynput Key
-        def get_pynput_key(key_str):
-            key_str = key_str.lower()
-            if key_str.startswith('f') and key_str[1:].isdigit():
-                f_num = int(key_str[1:])
-                return getattr(keyboard.Key, f"f{f_num}")
-            if key_str == "space":
-                return keyboard.Key.space
-            if key_str == "caps lock" or key_str == "caps_lock":
-                return keyboard.Key.caps_lock
-            return keyboard.KeyCode.from_char(key_str[0])
-
-        rec_key = get_pynput_key(self.hotkey_record)
-        play_key = get_pynput_key(self.hotkey_play)
+        rec_key = self.get_pynput_key(self.hotkey_record)
+        play_key = self.get_pynput_key(self.hotkey_play)
 
         def on_press(key):
             if key == rec_key:
@@ -735,8 +735,8 @@ class HinnoMacroApp(ctk.CTk):
         frame.pack(fill="both", expand=True, padx=20, pady=(0, 20))
         frame.grid_columnconfigure(1, weight=1)
         
-        # Option values list (F1-F12)
-        f_keys = [f"F{i}" for i in range(1, 13)]
+        # Option values list (F1-F12 + [, ])
+        f_keys = [f"F{i}" for i in range(1, 13)] + ["[", "]"]
         
         # Record Hotkey
         lbl_rec = ctk.CTkLabel(frame, text="Record Hotkey:", font=ctk.CTkFont(family="Segoe UI", size=12, weight="bold"), text_color=TEXT_MUTED)
@@ -906,7 +906,7 @@ class HinnoMacroApp(ctk.CTk):
                 
                 # Check for stop key
                 # Convert string key to pynput Key
-                rec_key = getattr(keyboard.Key, self.hotkey_record.lower(), None)
+                rec_key = self.get_pynput_key(self.hotkey_record)
                 if key == rec_key:
                     return False
                 
