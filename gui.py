@@ -958,18 +958,48 @@ class HinnoMacroApp(ctk.CTk):
             
         if not self.playback_running:
             macro = self.macros[self.active_macro]
-            steps = macro["lobby_steps"] if macro["section"] == "lobby" else macro["strategy_steps"]
-            if len(steps) == 0:
-                messagebox.showwarning("Warning", "No steps in this section to play.")
+            lobby_len = len(macro["lobby_steps"])
+            strat_len = len(macro["strategy_steps"])
+            
+            if lobby_len == 0 and strat_len == 0:
+                messagebox.showwarning("Warning", "No steps in this macro to play.")
                 return
+
+            run_mode = "section"  # Default
+            
+            if lobby_len > 0 and strat_len > 0:
+                ans = messagebox.askyesnocancel(
+                    "Select Run Mode",
+                    "Do you want to run the FULL Auto-Play loop sequentially?\n\n"
+                    "Yes: Run Lobby -> Strategy -> Re-lobby Loop.\n"
+                    "No: Run ONLY the current section steps.\n"
+                    "Cancel: Cancel execution."
+                )
+                if ans is None:
+                    return
+                elif ans is True:
+                    run_mode = "full"
+            elif lobby_len > 0:
+                run_mode = "lobby_only"
+            elif strat_len > 0:
+                run_mode = "strat_only"
 
             self.log_status("Running...", color=GREEN_ACCENT)
             self.btn_run.configure(text=f"⏹️ Stop ({self.hotkey_play})", fg_color=RED_ACCENT, hover_color="#3a1c1a")
             self.btn_record.configure(state="disabled")
             self.playback_running = True
             
-            # Run steps in a separate thread so the GUI doesn't freeze
-            self.running_thread = threading.Thread(target=self._run_steps, args=(steps,), daemon=True)
+            # Start player thread
+            if run_mode == "full":
+                self.running_thread = threading.Thread(target=self._run_sequential_loop, daemon=True)
+            elif run_mode == "lobby_only":
+                self.running_thread = threading.Thread(target=self._run_steps, args=(macro["lobby_steps"],), daemon=True)
+            elif run_mode == "strat_only":
+                self.running_thread = threading.Thread(target=self._run_steps, args=(macro["strategy_steps"],), daemon=True)
+            else: # "section"
+                steps = macro["lobby_steps"] if macro["section"] == "lobby" else macro["strategy_steps"]
+                self.running_thread = threading.Thread(target=self._run_steps, args=(steps,), daemon=True)
+                
             self.running_thread.start()
         else:
             self.playback_running = False
@@ -977,66 +1007,185 @@ class HinnoMacroApp(ctk.CTk):
             self.btn_run.configure(text=f"▶ Run Macro ({self.hotkey_play})", fg_color=BLUE_ACCENT, hover_color="#0066cc")
             self.btn_record.configure(state="normal")
 
+    def execute_single_step(self, step):
+        stype = step["type"]
+        self.log_status(f"Executing: {self.get_step_description(step)}", color=BLUE_ACCENT)
+        
+        try:
+            hwnd = me.find_roblox_hwnd()
+            
+            if stype == "click":
+                if hwnd:
+                    cx, cy = me.screen_to_client(hwnd, step["x"], step["y"])
+                    me.send_background_click(hwnd, "left", cx, cy)
+                else:
+                    me.win32_move_absolute(step["x"], step["y"])
+                    me.win32_click("left")
+                time.sleep(0.5)
+                
+            elif stype == "move":
+                if hwnd:
+                    cx, cy = me.screen_to_client(hwnd, step["x"], step["y"])
+                    me.send_background_move(hwnd, cx, cy)
+                else:
+                    me.win32_move_absolute(step["x"], step["y"])
+                time.sleep(0.5)
+                
+            elif stype == "keypress":
+                if hwnd:
+                    vk = me.key_to_vk(step["key"])
+                    me.send_background_key(hwnd, vk, 0.05)
+                else:
+                    k = me.deserialize_key(step["key"])
+                    me.keyboard_controller.press(k)
+                    time.sleep(0.05)
+                    me.keyboard_controller.release(k)
+                time.sleep(0.3)
+                
+            elif stype == "type":
+                for char in step["text"]:
+                    if not self.playback_running:
+                        break
+                    if hwnd:
+                        vk = me.key_to_vk(char)
+                        me.send_background_key(hwnd, vk, 0.02)
+                    else:
+                        me.keyboard_controller.type(char)
+                    time.sleep(0.05)
+                time.sleep(0.5)
+                
+            elif stype == "delay":
+                secs = step["seconds"]
+                steps_count = int(secs * 10)
+                for _ in range(steps_count):
+                    if not self.playback_running:
+                        return
+                    time.sleep(0.1)
+                remainder = secs - (steps_count * 0.1)
+                if remainder > 0:
+                    time.sleep(remainder)
+        except Exception as e:
+            print(f"Error executing step: {e}")
+
     def _run_steps(self, steps):
         for step in steps:
             if not self.playback_running:
                 break
-                
-            stype = step["type"]
-            self.log_status(f"Executing: {self.get_step_description(step)}", color=BLUE_ACCENT)
-            
-            try:
-                # Ensure Roblox is active or use background post-message
-                hwnd = me.find_roblox_hwnd()
-                
-                if stype == "click":
-                    if hwnd:
-                        # Convert to relative client coords or use absolute
-                        cx, cy = me.screen_to_client(hwnd, step["x"], step["y"])
-                        me.send_background_click(hwnd, "left", cx, cy)
-                    else:
-                        me.win32_move_absolute(step["x"], step["y"])
-                        me.win32_click("left")
-                    time.sleep(0.5)
-                    
-                elif stype == "move":
-                    if hwnd:
-                        cx, cy = me.screen_to_client(hwnd, step["x"], step["y"])
-                        me.send_background_move(hwnd, cx, cy)
-                    else:
-                        me.win32_move_absolute(step["x"], step["y"])
-                    time.sleep(0.5)
-                    
-                elif stype == "keypress":
-                    if hwnd:
-                        vk = me.key_to_vk(step["key"])
-                        me.send_background_key(hwnd, vk, 0.05)
-                    else:
-                        k = me.deserialize_key(step["key"])
-                        me.keyboard_controller.press(k)
-                        time.sleep(0.05)
-                        me.keyboard_controller.release(k)
-                    time.sleep(0.3)
-                    
-                elif stype == "type":
-                    # Type text
-                    for char in step["text"]:
-                        if not self.playback_running:
-                            break
-                        if hwnd:
-                            vk = me.key_to_vk(char)
-                            me.send_background_key(hwnd, vk, 0.02)
-                        else:
-                            me.keyboard_controller.type(char)
-                        time.sleep(0.05)
-                    time.sleep(0.5)
-                    
-                elif stype == "delay":
-                    time.sleep(step["seconds"])
-            except Exception as e:
-                print(f"Error executing step: {e}")
+            self.execute_single_step(step)
                 
         # Finished playing all steps
+        self.after(0, self.stop_playback_gui)
+
+    def _run_sequential_loop(self):
+        macro = self.macros[self.active_macro]
+        
+        while self.playback_running:
+            # 1. RUN LOBBY STEPS
+            if len(macro["lobby_steps"]) > 0:
+                self.log_status("Running Lobby Steps...", color=BLUE_ACCENT)
+                for step in macro["lobby_steps"]:
+                    if not self.playback_running:
+                        return
+                    self.execute_single_step(step)
+            
+            # 2. WAIT FOR MAP SPAWN
+            self.log_status("Waiting to spawn in map...", color=BLUE_ACCENT)
+            spawned = False
+            ready_btn_path = os.path.join(r"D:\Tools\Macro\templates", "ready_btn.png")
+            
+            for _ in range(25): # 25 seconds timeout
+                if not self.playback_running:
+                    return
+                
+                # Check for ready button using opencv template match
+                hwnd = me.find_roblox_hwnd()
+                if hwnd and os.path.exists(ready_btn_path):
+                    import auto_play_agent as agent
+                    screen = agent.capture_roblox_window(hwnd)
+                    coords = agent.find_template_on_screen(screen, ready_btn_path)
+                    if coords:
+                        self.log_status("Ready button found! Clicking...", color=GREEN_ACCENT)
+                        cx, cy = me.screen_to_client(hwnd, coords[0], coords[1])
+                        me.send_background_click(hwnd, "left", cx, cy)
+                        time.sleep(1)
+                        spawned = True
+                        break
+                time.sleep(1)
+                
+            if not spawned:
+                self.log_status("No ready button, proceeding to Strategy...", color=BLUE_ACCENT)
+                time.sleep(2)
+                
+            # 3. RUN STRATEGY STEPS
+            if len(macro["strategy_steps"]) > 0:
+                self.log_status("Running Strategy Steps...", color=BLUE_ACCENT)
+                for step in macro["strategy_steps"]:
+                    if not self.playback_running:
+                        return
+                    self.execute_single_step(step)
+                    
+            # 4. WAIT FOR GAME OVER
+            self.log_status("Playing... Waiting for Win/Lose screen", color=GREEN_ACCENT)
+            game_over = False
+            skip_btn_path = os.path.join(r"D:\Tools\Macro\templates", "skip_btn.png")
+            
+            while not game_over:
+                if not self.playback_running:
+                    return
+                
+                hwnd = me.find_roblox_hwnd()
+                if hwnd:
+                    import auto_play_agent as agent
+                    screen = agent.capture_roblox_window(hwnd)
+                    
+                    # Auto skip wave
+                    if os.path.exists(skip_btn_path):
+                        skip_coords = agent.find_template_on_screen(screen, skip_btn_path)
+                        if skip_coords:
+                            cx, cy = me.screen_to_client(hwnd, skip_coords[0], skip_coords[1])
+                            me.send_background_click(hwnd, "left", cx, cy)
+                    else:
+                        # Fallback spam 'f'
+                        vk = me.key_to_vk("f")
+                        me.send_background_key(hwnd, vk, 0.05)
+
+                    # Check for victory/defeat
+                    vic_found = False
+                    def_found = False
+                    
+                    if macro["victory_img"] and os.path.exists(macro["victory_img"]):
+                        vic_found = agent.find_template_on_screen(screen, macro["victory_img"]) is not None
+                    if macro["defeat_img"] and os.path.exists(macro["defeat_img"]):
+                        def_found = agent.find_template_on_screen(screen, macro["defeat_img"]) is not None
+                        
+                    if vic_found or def_found:
+                        self.log_status("Game Over detected!", color=RED_ACCENT)
+                        game_over = True
+                        break
+                else:
+                    time.sleep(1)
+                    continue
+                time.sleep(2) # check interval
+                
+            if not self.playback_running:
+                return
+                
+            # 5. RESET / PLAY AGAIN
+            self.log_status("Clicking Play Again...", color=BLUE_ACCENT)
+            px = macro["play_again_x"]
+            py = macro["play_again_y"]
+            hwnd = me.find_roblox_hwnd()
+            if hwnd:
+                cx, cy = me.screen_to_client(hwnd, px, py)
+                me.send_background_click(hwnd, "left", cx, cy)
+            else:
+                me.win32_move_absolute(px, py)
+                me.win32_click("left")
+                
+            self.log_status("Loading lobby (waiting 15s)...", color=BLUE_ACCENT)
+            time.sleep(15)
+
+        # Finished playing loop
         self.after(0, self.stop_playback_gui)
 
     def stop_playback_gui(self):
